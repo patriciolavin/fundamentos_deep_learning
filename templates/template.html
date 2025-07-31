@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Análisis Predictivo de la Tasa de Natalidad</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --secondary-color: #1e40af;
+            --accent-color: #3b82f6;
+            --success-color: #059669;
+            --warning-color: #d97706;
+            --error-color: #dc2626;
+            --text-primary: #1f2937;
+            --text-secondary: #6b7280;
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8fafc;
+            --bg-card: #ffffff;
+            --border-color: #e5e7eb;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* Header Section */
+        .header {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 3rem 2rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow-lg);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-color), var(--accent-color), var(--success-color));
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header h2 {
+            font-size: 1.25rem;
+            color: var(--text-secondary);
+            font-weight: 400;
+            margin-bottom: 1rem;
+        }
+
+        .header-stats {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 1rem;
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            min-width: 120px;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-top: 0.25rem;
+        }
+
+        /* Card System */
+        .card {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--border-color);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--bg-secondary);
+        }
+
+        .card-icon {
+            width: 3rem;
+            height: 3rem;
+            background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 1rem;
+            color: white;
+            font-size: 1.25rem;
+        }
+
+        .card-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        /* Executive Summary */
+        .executive-summary {
+            background: linear-gradient(135deg, var(--success-color), #10b981);
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .executive-summary::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 100%;
+            height: 200%;
+            background: rgba(255, 255, 255, 0.1);
+            transform: rotate(45deg);
+        }
+
+        .best-model-highlight {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 1rem;
+            border-radius: 12px;
+            margin-top: 1rem;
+            backdrop-filter: blur(10px);
+        }
+
+        /* Metrics Grid */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin: 1.5rem 0;
+        }
+
+        .metric-card {
+            background: var(--bg-secondary);
+            padding: 1.5rem;
+            border-radius: 12px;
+            text-align: center;
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .metric-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            display: block;
+        }
+
+        .metric-label {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-top: 0.5rem;
+        }
+
+        /* Tables */
+        .table-container {
+            overflow-x: auto;
+            border-radius: 12px;
+            box-shadow: var(--shadow-sm);
+            margin: 1.5rem 0;
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--bg-card);
+            font-size: 0.875rem;
+        }
+
+        .table th {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 1rem 0.75rem;
+            text-align: left;
+            font-weight: 600;
+            font-size: 0.875rem;
+            letter-spacing: 0.025em;
+        }
+
+        .table td {
+            padding: 0.875rem 0.75rem;
+            border-bottom: 1px solid var(--border-color);
+            vertical-align: top;
+        }
+
+        .table tbody tr:hover {
+            background: var(--bg-secondary);
+        }
+
+        .table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* Chart Grid - 1x2 Layout */
+        .chart-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin: 2rem 0;
+        }
+
+        .chart-container {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border-color);
+        }
+
+        .chart-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 1rem;
+            text-align: center;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--bg-secondary);
+        }
+
+        .chart-container img {
+            width: 100%;
+            height: auto;
+            border-radius: 8px;
+        }
+
+        /* Single chart for odd numbers */
+        .chart-single {
+            grid-column: 1 / -1;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* Quality Report Grid */
+        .quality-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin: 1.5rem 0;
+        }
+
+        .quality-item {
+            background: var(--bg-secondary);
+            padding: 1.5rem;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .quality-value {
+            font-size: 1.75rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .quality-value.good { color: var(--success-color); }
+        .quality-value.warning { color: var(--warning-color); }
+        .quality-value.error { color: var(--error-color); }
+
+        /* Feature Importance */
+        .feature-importance {
+            background: linear-gradient(135deg, #8b5cf6, #a855f7);
+            color: rgb(3, 3, 3);
+        }
+
+        /* Analysis Section */
+        .analysis-points {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .analysis-point {
+            background: var(--bg-secondary);
+            padding: 1.5rem;
+            border-radius: 12px;
+            border-left: 4px solid var(--accent-color);
+        }
+
+        .analysis-point h4 {
+            color: var(--primary-color);
+            margin-bottom: 0.75rem;
+            font-size: 1.125rem;
+        }
+
+        /* Recommendations */
+        .recommendation-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1rem;
+            margin: 1.5rem 0;
+        }
+
+        .recommendation-item {
+            background: var(--bg-secondary);
+            padding: 1.25rem;
+            border-radius: 12px;
+            border-left: 4px solid var(--success-color);
+        }
+
+        .recommendation-item h4 {
+            color: var(--success-color);
+            margin-bottom: 0.5rem;
+        }
+
+        /* Final Conclusions */
+        .conclusions {
+            background: linear-gradient(135deg, var(--secondary-color), var(--primary-color));
+            color: white;
+        }
+
+        .conclusion-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .conclusion-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .final-recommendation {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin-top: 2rem;
+            text-align: center;
+            backdrop-filter: blur(10px);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .chart-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header-stats {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .metrics-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Animation */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .card {
+            animation: fadeInUp 0.6s ease forwards;
+        }
+
+        /* Print Styles */
+        @media print {
+            body {
+                background: white;
+            }
+            
+            .card {
+                box-shadow: none;
+                border: 1px solid #ddd;
+                break-inside: avoid;
+            }
+            
+            .chart-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header Section -->
+        <div class="header">
+            <h1><i class="fas fa-chart-line"></i> Análisis Predictivo de la Tasa de Natalidad</h1>
+            <h2>Un enfoque comparativo entre modelos clásicos y redes neuronales</h2>
+            <div class="header-stats">
+                <div class="stat-item">
+                    <div class="stat-value">{{ eda_results.df_shape[0] }}</div>
+                    <div class="stat-label">Observaciones</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">{{ eda_results.df_shape[1] }}</div>
+                    <div class="stat-label">Variables</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">{{ best_model_name }}</div>
+                    <div class="stat-label">Mejor Modelo</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Executive Summary -->
+        <div class="card executive-summary">
+            <div class="card-header">
+                <div class="card-icon">
+                    <i class="fas fa-star"></i>
+                </div>
+                <h2 class="card-title">Resumen Ejecutivo</h2>
+            </div>
+            <p style="font-size: 1.125rem; line-height: 1.7;">
+                Este reporte detalla el proceso de desarrollo y evaluación de modelos de machine learning para predecir la tasa de natalidad. 
+                Se compararon modelos clásicos (Ridge, Lasso, RandomForest) con redes neuronales, concluyendo que el modelo es 
+                el más preciso y robusto para el dataset disponible.
+            </p>
+            <div class="best-model-highlight">
+                <h3 style="margin-bottom: 0.5rem;"><i class="fas fa-trophy"></i> Modelo Recomendado</h3>
+                <strong style="font-size: 1.25rem;">{{ best_model_name }}</strong>
+            </div>
+        </div>
+
+        <!-- EDA Section -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-icon">
+                    <i class="fas fa-search"></i>
+                </div>
+                <h2 class="card-title">Análisis Exploratorio de Datos (EDA)</h2>
+            </div>
+            
+            <div class="quality-grid">
+                <div class="quality-item">
+                    <div class="quality-value good">{{ eda_results.df_shape[0] }}x{{ eda_results.df_shape[1] }}</div>
+                    <div class="quality-label">Dimensiones del Dataset</div>
+                </div>
+                <div class="quality-item">
+                    <div class="quality-value {{ 'error' if eda_results.quality_report.exact_duplicates.count > 0 else 'good' }}">
+                        {{ eda_results.quality_report.exact_duplicates.count }}
+                    </div>
+                    <div class="quality-label">Duplicados ({{ eda_results.quality_report.exact_duplicates.percentage }}%)</div>
+                </div>
+                <div class="quality-item">
+                    <div class="quality-value {{ 'warning' if eda_results.quality_report.outliers.count_rows > 0 else 'good' }}">
+                        {{ eda_results.quality_report.outliers.count_rows }}
+                    </div>
+                    <div class="quality-label">Filas con Outliers ({{ eda_results.quality_report.outliers.percentage_rows }}%)</div>
+                </div>
+            </div>
+
+            <h3 style="margin: 2rem 0 1rem 0; color: var(--primary-color);"><i class="fas fa-exclamation-triangle"></i> Valores Ausentes</h3>
+            <div class="table-container">
+                {{ eda_results.quality_report.missing_data.to_html(classes='table', table_id='missing-data-table') | safe }}
+            </div>
+
+            <h3 style="margin: 2rem 0 1rem 0; color: var(--primary-color);"><i class="fas fa-bug"></i> Inconsistencias Semánticas</h3>
+            <div style="background: var(--bg-secondary); padding: 1rem; border-radius: 8px;">
+                {{ eda_results.quality_report.semantic_inconsistencies }}
+            </div>
+
+            <h3 style="margin: 2rem 0 1rem 0; color: var(--primary-color);"><i class="fas fa-table"></i> Muestra de Datos (Primeras 5 filas)</h3>
+            <div class="table-container">
+                {{ eda_results.df_head_html | safe }}
+            </div>
+
+            <h3 style="margin: 2rem 0 1rem 0; color: var(--primary-color);"><i class="fas fa-calculator"></i> Estadísticas Descriptivas Avanzadas</h3>
+            <div class="table-container">
+                {{ eda_results.advanced_stats_html | safe }}
+            </div>
+        </div>
+
+        <!-- Correlations and Distributions -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-icon">
+                    <i class="fas fa-chart-bar"></i>
+                </div>
+                <h2 class="card-title">Correlaciones y Distribuciones</h2>
+            </div>
+            
+            <div class="chart-grid">
+                {% if encoded_images['distribucion_variables'] %}
+                <div class="chart-container">
+                    <h3 class="chart-title">Distribución de Variables Numéricas</h3>
+                    <img src="data:image/png;base64,{{ encoded_images['distribucion_variables'] }}" alt="Distribución de Variables Numéricas">
+                </div>
+                {% endif %}
+                {% if encoded_images['heatmap_correlacion'] %}
+                <div class="chart-container">
+                    <h3 class="chart-title">Heatmap de Correlación</h3>
+                    <img src="data:image/png;base64,{{ encoded_images['heatmap_correlacion'] }}" alt="Heatmap de Correlación">
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Neural Network Performance -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-icon">
+                    <i class="fas fa-brain"></i>
+                </div>
+                <h2 class="card-title">Rendimiento de Configuraciones de la Red Neuronal</h2>
+
+            </div>
+            <h3>Tabla Comparativa de Configuraciones de Redes Neuronales</h3>
+            <div class="table-container">
+                {{ nn_comparison_html | safe }}
+            </div>
+        </div>
+
+        <!-- Classic Models Diagnostics -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-icon">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <h2 class="card-title">Gráficos de Diagnóstico - Modelos Clásicos</h2>
+            </div>
+            
+            {% for model_name in classic_plots %}
+            <h3 style="margin: 2rem 0 1rem 0; color: var(--primary-color); text-align: center;">
+                <i class="fas fa-robot"></i> {{ model_name }}
+            </h3>
+            <div class="chart-grid">
+                {% if classic_plots[model_name].predicciones %}
+                <div class="chart-container">
+                    <h4 class="chart-title">Valores Reales vs. Predichos</h4>
+                    <img src="data:image/png;base64,{{ classic_plots[model_name].predicciones }}" alt="Reales vs. Predichos - {{ model_name }}">
+                </div>
+                {% endif %}
+                {% if classic_plots[model_name].residuos %}
+                <div class="chart-container">
+                    <h4 class="chart-title">Análisis de Residuos</h4>
+                    <img src="data:image/png;base64,{{ classic_plots[model_name].residuos }}" alt="Análisis de Residuos - {{ model_name }}">
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Neural Network Diagnostics -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-icon">
+                    <i class="fas fa-network-wired"></i>
+                </div>
+                <h2 class="card-title">Gráficos de Diagnóstico - Redes Neuronales</h2>
+            </div>
+            
+            {% for model_name in nn_plots %}
+            <h3 style="margin: 2rem 0 1rem 0; color: var(--primary-color); text-align: center;">
+                <i class="fas fa-brain"></i> {{ model_name | replace('_', ' ') | title }}
+            </h3>
+            <div class="chart-grid">
+                {% if nn_plots[model_name].predicciones %}
+                <div class="chart-container">
+                    <h4 class="chart-title">Valores Reales vs. Predichos</h4>
+                    <img src="data:image/png;base64,{{ nn_plots[model_name].predicciones }}" alt="Reales vs. Predichos - {{ model_name }}">
+                </div>
+                {% endif %}
+                {% if nn_plots[model_name].residuos %}
+                <div class="chart-container">
+                    <h4 class="chart-title">Análisis de Residuos</h4>
+                    <img src="data:image/png;base64,{{ nn_plots[model_name].residuos }}" alt="Análisis de Residuos - {{ model_name }}">
+                </div>
+                {% endif %}
+            </div>
+            {% if nn_plots[model_name].curva_aprendizaje %}
+            <div class="chart-container chart-single">
+                <h4 class="chart-title">Curva de Aprendizaje</h4>
+                <img src="data:image/png;base64,{{ nn_plots[model_name].curva_aprendizaje }}" alt="Curva de Aprendizaje - {{ model_name }}">
+            </div>
+            {% endif %}
+            {% endfor %}
+        </div>
+
+        <!-- Model Performance Analysis -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-icon">
+                    <i class="fas fa-trophy"></i>
+                </div>
+                <h2 class="card-title">Análisis de Rendimiento de Modelos</h2>
+            </div>
+            
+            <h3 style="margin-bottom: 1rem; color: var(--primary-color);"><i class="fas fa-table"></i> Tabla Comparativa de Métricas</h3>
+            <div class="table-container">
+                {{ model_results_html | safe }}
+            </div>
+        </div>
+
+        <!-- Feature Importance -->
+        <div class="card feature-importance">
+            <div class="card-header">
+                <div class="card-icon">
+                    <i class="fas fa-weight-hanging"></i>
+                </div>
+                <h2 class="card-title">Variables más Influyentes ({{ best_model_name }})</h2>
+            </div>
+            
+            {% if plots_b64.get('shap_summary_plot') %}
+            <div class="chart-container chart-single" style="background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px);">
+                <h3 class="chart-title" style="color: white;">Importancia de Variables según SHAP</h3>
+                <p style="text-align: center; margin-bottom: 1rem; color: rgba(255, 255, 255, 0.9);">
+                    El siguiente gráfico muestra el impacto promedio de cada variable en la predicción. Valores más altos indican mayor influencia.
+                </p>
+                <img src="data:image/png;base64,{{ plots_b64['shap_summary_plot'] }}" alt="Importancia de Variables (SHAP)">
+            </div>
+            {% endif %}
+            
+            <div style="background: rgba(255, 255, 255, 0.1); padding: 1.5rem; border-radius: 12px; backdrop-filter: blur(10px); margin-top: 1rem;">
+                <h4 style="color: white; margin-bottom: 1rem; text-align: center;">
+                    <i class="fas fa-list-ol"></i> Ranking de Variables más Influyentes
+                </h4>
+                {% if feature_importance_html %}
+                <div class="table-container" style="background: rgba(255, 255, 255, 0.95); border-radius: 8px; overflow: hidden;">
+                    {{ feature_importance_html | safe }}
+                </div>
+                {% else %}
+                <div style="background: rgba(255, 255, 255, 0.9); padding: 1rem; border-radius: 8px; text-align: center; color: var(--text-secondary);">
+                    <i class="fas fa-info-circle"></i> 
+                    <p>Los datos de importancia de variables se cargarán automáticamente cuando estén disponibles.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- In-depth Analysis -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-icon">
+                    <i class="fas fa-microscope"></i>
+                </div>
+                <h2 class="card-title">Análisis de Resultados y Reflexión Final</h2>
+            </div>
+            
+            <h3 style="margin-bottom: 1rem; color: var(--primary-color);"><i class="fas fa-lightbulb"></i> Análisis de Variables Influyentes</h3>
+            <p style="font-size: 1.1rem; line-height: 1.7; margin-bottom: 2rem;">
+                El modelo <strong>{{ best_model_name }}</strong> demostró el mejor rendimiento, con un R² superior al de otros modelos. 
+                Esto sugiere que las relaciones entre los factores socioeconómicos y la tasa de natalidad son complejas y, en el caso de 
+                las redes neuronales, no lineales. Utilizamos SHAP (SHapley Additive exPlanations) para interpretar la importancia de cada 
+                variable en las predicciones.
+            </p>
+
+            <h3 style="margin: 2rem 0 1rem 0; color: var(--primary-color);"><i class="fas fa-search-plus"></i> Justificación en Profundidad</h3>
+            <div class="analysis-points">
+                <div class="analysis-point">
+                    <h4><i class="fas fa-birthday-cake"></i> Edad de Maternidad</h4>
+                    <p>La variable más determinante. Un aumento en la edad promedio de maternidad reduce significativamente la tasa de natalidad, 
+                    reflejando una menor ventana biológica para tener hijos.</p>
+                </div>
+                <div class="analysis-point">
+                    <h4><i class="fas fa-briefcase"></i> Empleo y Educación Femenina</h4>
+                    <p>Estas variables reflejan un fenómeno socioeconómico interconectado. Mayor educación y participación laboral 
+                    femenina se correlacionan con una natalidad más baja debido al costo de oportunidad.</p>
+                </div>
+                <div class="analysis-point">
+                    <h4><i class="fas fa-heartbeat"></i> Acceso a Salud</h4>
+                    <p>Un mejor acceso a la salud implica mayor control sobre la fecundidad, reduciendo los nacimientos no planificados.</p>
+                </div>
+            </div>
+
+            <h3 style="margin: 2rem 0 1rem 0; color: var(--primary-color);"><i class="fas fa-globe"></i> Relación con Tendencias Demográficas Globales</h3>
+            <div style="background: var(--bg-secondary); padding: 1.5rem; border-radius: 12px; margin-bottom: 2rem;">
+                <p style="font-size: 1.1rem; line-height: 1.7;">
+                    Los resultados reflejan la Teoría de la Transición Demográfica, donde las sociedades evolucionan de altas tasas de natalidad 
+                    a tasas más bajas con el desarrollo socioeconómico. El modelo valida esta teoría al identificar patrones consistentes en países 
+                    desarrollados (baja natalidad, alta educación y empleo femenino) y países en desarrollo (transición hacia menor natalidad).
+                </p>
+            </div>
+
+            <h3 style="margin: 2rem 0 1rem 0; color: var(--primary-color);"><i class="fas fa-rocket"></i> Propuestas de Mejora y Futuras Versiones del Modelo</h3>
+            <div class="recommendation-grid">
+                <div class="recommendation-item">
+                    <h4><i class="fas fa-database"></i> Aumentar la Cantidad de Datos</h4>
+                    <p>Recolectar datos de panel para capturar dinámicas temporales.</p>
+                    <h4><i class="fas fa-database"></i> Ingeniería de Características</h4>
+                    <p>Crear variables de interacción para capturar relaciones no lineales</p>
+                    <h4><i class="fas fa-database"></i> Optimización de Hiperparámetros</h4>
+                    <p>Aplicar GridSearchCV para optimizar modelos como Ridge.</p>
+                    <h4><i class="fas fa-database"></i> Exploración de Modelos Alternativos</h4>
+                    <p>Probar modelos como XGBoost o LightGBM con más datos.</p>
+                </div>
+            </div>
+
+            <h2>Conclusiones Finales</h2>
+            <ul>
+                <li><strong>No Linealidad:</strong> El modelo {{ best_model_name }} capturó relaciones complejas, superando a modelos lineales.</li>
+                <li><strong>Experimentación:</strong> La experimentación sistemática con redes neuronales evitó el sobreajuste, destacando la 
+                    importancia de la regularización.</li>
+                <li><strong>Consistencia:</strong> La Edad de Maternidad, el Nivel Educativo y la Tasa de Empleo Femenino son los factores 
+                    más influyentes, alineándose con teorías demográficas.</li>
+            </ul>
+
+</body>
+</html>

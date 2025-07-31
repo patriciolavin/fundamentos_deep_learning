@@ -1,0 +1,25 @@
+/
+├── data/
+│   └── raw/
+│       └── dataset_natalidad.csv  (Este es tu archivo de datos)
+│
+├── models/
+│   └── (Aquí se guardará el modelo final)
+│
+├── reports/
+│   └── (Aquí se guardará el reporte HTML)
+│
+├── templates/
+│   └── template.html
+│
+├── utils/
+│   ├── config.py
+│   └── logger.py
+│
+├── src/
+│   ├── data_processing.py
+│   ├── eda.py
+│   ├── train_model.py
+│   └── reporting.py
+│
+└── main.py
